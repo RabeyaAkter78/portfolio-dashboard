@@ -60,11 +60,11 @@ const SideBar = ({ closeDrawer }) => {
       Link: "/experience",
     },
 
-    {
-      icon: <FaUser className="h-5 w-5" />,
-      label: "Profile",
-      Link: "/profile",
-    },
+    // {
+    //   icon: <FaUser className="h-5 w-5" />,
+    //   label: "Profile",
+    //   Link: "/profile",
+    // },
     {
       icon: <ImBlog className="h-5 w-5" />,
       label: "Blogs",
@@ -97,7 +97,7 @@ const SideBar = ({ closeDrawer }) => {
   ];
 
   return (
-    <div className="bg-white h-full md:ml-16">
+    <div className="bg-white h-[90vh] md:ml-16">
       <div className="flex flex-col md:h-full">
         <div className="flex flex-col gap-2 md:my-5 mb-10">
           {menuItems.map((item) => (
@@ -155,7 +155,7 @@ const SideBar = ({ closeDrawer }) => {
           {/* Logout */}
           <Link className="text-black hover:text-black" to="/sign-in">
             <div
-              className="bg-primary w-72 md:mt-20 py-3 flex justify-center items-center cursor-pointer hover:bg-primary text-white"
+              className="bg-primary w-72 md:mt-60 py-3 flex justify-center items-center cursor-pointer hover:bg-primary text-white"
               onClick={() => console.log("Logged out")}
             >
               <FiLogOut className="text-xl" />

@@ -52,7 +52,7 @@ const MainLayout = () => {
                                         </span>
                                     </div>
                                 </Link> */}
-                                <Link to="/admin-profile">
+                                <Link to="/profile">
                                     <div className="flex justify-center items-center gap-2">
                                         <img src={"user"} alt="" className="w-10 h-10 rounded-full border border-white" />
                                         <p className="md:text-xl font-semibold ">Mr Admin</p>
