@@ -9,8 +9,28 @@ import Blogs from "../components/Blogs/Blogs";
 import About from "../components/Seetings/About/About";
 import Contact from "../components/Seetings/Contact/Contact";
 import AddColorAndLogo from "../components/Seetings/AddColorAndLogo/AddColorAndLogo";
+import Login from "../components/Auth/Login/Login";
+import ForgatePassword from "../components/Auth/ForgatePassword/ForgatePassword";
+import VerifyPass from "../components/Auth/VerifyPass/VerifyPass";
+import NewPass from "../components/Auth/Newpass/NewPass";
 
 export const router = createBrowserRouter([
+  {
+    path: "/sign-in",
+    element: <Login></Login>,
+  },
+  {
+    path: "/forgate-password",
+    element: <ForgatePassword></ForgatePassword>,
+  },
+  {
+    path: "/varification",
+    element: <VerifyPass></VerifyPass>,
+  },
+  {
+    path: "/new-password",
+    element: <NewPass />,
+  },
   {
     path: "/",
     element: <MainLayout />,
