@@ -1,8 +1,7 @@
-import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { BASE_URL } from "../utils/baseUrl";
 import { message } from "antd";
-import { createApi } from "@reduxjs/toolkit/query";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${BASE_URL}`,
@@ -40,5 +39,6 @@ const baseQueryWithRefreshToken = async (args, api, extraOptions) => {
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithRefreshToken,
+    tagTypes: ["User"],
   endpoints: () => ({}),
 });

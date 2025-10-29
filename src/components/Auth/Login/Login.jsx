@@ -2,27 +2,28 @@ import { Checkbox, Form, Input, message, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
-// import { useLoginMutation } from "../../../redux/Feature/auth/authApi";
+import { useLoginMutation } from "../../../redux/features/auth/authApi";
 const Login = () => {
   const [showpassword, setShowpassword] = useState(false);
-//   const navigate = useNavigate();
+  const navigate = useNavigate();
   const togglePasswordVisibility = () => {
     setShowpassword(!showpassword);
   };
 
-//   const [login] = useLoginMutation();
+  const [login] = useLoginMutation();
   const onFinish = async (values) => {
-    // const userInfo = {
-    //   email: values.email,
-    //   password: values.password,
-    // };
+    const userInfo = {
+      email: values.email,
+      password: values.password,
+    };
+    console.log(userInfo);
     try {
-    //   const response = await login(userInfo).unwrap();
-    //   if (response?.token) {
-    //     localStorage.setItem("token", response?.token);
-    //     navigate("/");
-    //   }
-    //   message.success(response.message);
+      const response = await login(userInfo).unwrap();
+      if (response?.token) {
+        localStorage.setItem("token", response?.token);
+        message.success(response.message);
+        navigate("/");
+      }
     } catch (error) {
       console.log(error);
       message.error(error?.data?.message);
