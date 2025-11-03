@@ -14,9 +14,18 @@ const SkillApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags: ["Skills"],
+      providesTags: ["skills"],
+    }),
+
+    createSkill: builder.mutation({
+      query: (data) => ({
+        url: "/skills/create-skill",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["skills"],
     }),
   }),
 });
 
-export const { useGetAllSkillsQuery } = SkillApi;
+export const { useGetAllSkillsQuery, useCreateSkillMutation } = SkillApi;

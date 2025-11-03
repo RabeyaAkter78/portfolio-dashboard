@@ -3,6 +3,7 @@ import {
   ConfigProvider,
   Form,
   Input,
+  message,
   Pagination,
   Select,
   Space,
@@ -16,15 +17,14 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaTrash } from "react-icons/fa6";
-import { useGetAllSkillsQuery } from "../../redux/features/skills/skillApi";
-import { BASE_URL } from "../../redux/utils/baseUrl";
+import {
+  useCreateSkillMutation,
+  useGetAllSkillsQuery,
+} from "../../redux/features/skills/skillApi";
+
 const Skills = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUserClient, setSelectedUserClient] = useState(null);
-  const [email, setEmail] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [addClientModal, setAddClientModal] = useState(false);
@@ -36,8 +36,10 @@ const Skills = () => {
     limit: pageSize,
     title,
   });
-  console.log(data?.data?.data);
+
   const skillData = data?.data?.data;
+
+  const [createSkill, { isLoading }] = useCreateSkillMutation();
 
   const handleBeforeUpload = (file) => {
     form.setFieldsValue({ class_banner: [file] });
@@ -61,16 +63,6 @@ const Skills = () => {
   const handlePageChange = (page, pageSize) => {
     setCurrentPage(page);
     setPageSize(pageSize);
-  };
-
-  const showModal = (record) => {
-    setSelectedUserClient(record);
-    setIsModalOpen(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    setSelectedUserClient(null);
   };
 
   const handleSearch = () => {
@@ -128,11 +120,6 @@ const Skills = () => {
           }}
         >
           <div className="flex justify-center items-center gap-2">
-            {/* <Space size="middle">
-              <button onClick={() => showModal(record)}>
-                <FiArrowUpRight className="text-2xl text-orange-500" />
-              </button>
-            </Space> */}
             <Space size="middle">
               <button onClick={() => handleNotes(record)}>
                 <FaTrash className="text-xl text-red-500" />
@@ -164,34 +151,28 @@ const Skills = () => {
     });
   };
 
-  const handleNotes = (record) => {
-    // console.log(record._id);
-    setSelectedUserClient(record._id);
-    navigate(`notes/${record._id}`, {
-      state: { selectedUserClient: record._id },
-    });
-  };
-
   const onFinish = async (values) => {
-    console.log("Success", values);
     const formData = new FormData();
     const data = {
-      name: values.name,
-      phoneNumber: values.phoneNumber,
-      location: values.location,
-      rates: values.rates,
+      title: values.title,
+      level: values.expertiesLevel,
+      yearsOfExp: values.yearsOfExp,
     };
 
-    // try {
-    //   formData.append("client", JSON.stringify(data));
-    //   formData.append("skillIcon", profileImage);
+    try {
+      formData.append("data", JSON.stringify(data));
+      formData.append("skillImage", profileImage);
 
-    //   const res = await createClient(formData).unwrap();
-    //   message.success(res?.message);
-    // } catch (error) {
-    //   message.error(error?.message);
-    //   console.log(error);
-    // }
+      const res = await createSkill(formData).unwrap();
+      message.success(res?.message);
+      form.resetFields();
+      setProfileImage(null);
+      setPreviewImage(null);
+      setAddClientModal(false);
+    } catch (error) {
+      message.error(error?.message);
+      console.log(error);
+    }
   };
 
   return (
@@ -215,8 +196,7 @@ const Skills = () => {
                   placeholder="Search "
                   allowClear
                   size="large"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange=""
                   onPressEnter={handleSearch}
                   prefix={
                     <SearchOutlined
@@ -322,26 +302,24 @@ const Skills = () => {
               <Input placeholder="Title"></Input>
             </Form.Item>
 
-            <Form.Item name="experties-level" label={<p>Experties Level</p>}>
+            <Form.Item name="expertiesLevel" label={<p>Experties Level</p>}>
               <Select>
-                <Select.Option value="Bigener">Bigener</Select.Option>
-                <Select.Option value="Intermidiate">Intermidiate</Select.Option>
-                <Select.Option value="Advance">Advance</Select.Option>
+                <Select.Option value="beginer">Bigener</Select.Option>
+                <Select.Option value="intermidiate">Intermidiate</Select.Option>
+                <Select.Option value="advance">Advance</Select.Option>
+                <Select.Option value="expert">Expert</Select.Option>
               </Select>
             </Form.Item>
 
-            <Form.Item name="description" label={<p>Description</p>}>
-              <Input.TextArea
-                rows={3}
-                placeholder="description"
-              ></Input.TextArea>
+            <Form.Item name="yearsOfExp" label={<p>Years Of Experience</p>}>
+              <Input placeholder="5"></Input>
             </Form.Item>
             <Form.Item>
               <button
                 type="submit"
                 className="w-full py-2    rounded-xl bg-primary text-white font-semiboldbold shadow-lg flex justify-center items-center gap-2"
               >
-                Submit
+                {isLoading ? "Submitting..." : "Submit"}
               </button>
             </Form.Item>
           </Form>
