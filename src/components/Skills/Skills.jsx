@@ -19,6 +19,7 @@ import Swal from "sweetalert2";
 import { FaTrash } from "react-icons/fa6";
 import {
   useCreateSkillMutation,
+  useDeleteSkillMutation,
   useGetAllSkillsQuery,
 } from "../../redux/features/skills/skillApi";
 
@@ -36,10 +37,12 @@ const Skills = () => {
     limit: pageSize,
     title,
   });
+  console.log(data?.data?.meta?.total);
 
   const skillData = data?.data?.data;
 
   const [createSkill, { isLoading }] = useCreateSkillMutation();
+  const [deleteSkill, { isLoading: deleteLoading }] = useDeleteSkillMutation();
 
   const handleBeforeUpload = (file) => {
     form.setFieldsValue({ class_banner: [file] });
@@ -67,6 +70,34 @@ const Skills = () => {
 
   const handleSearch = () => {
     // refetc();
+  };
+  const handleDelete = async (_id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteSkill(_id);
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success",
+        });
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "Something went wrong.",
+          icon: "error",
+        });
+      }
+    }
   };
 
   const columns = [
@@ -121,7 +152,7 @@ const Skills = () => {
         >
           <div className="flex justify-center items-center gap-2">
             <Space size="middle">
-              <button onClick={() => handleNotes(record)}>
+              <button onClick={() => handleDelete(record._id)}>
                 <FaTrash className="text-xl text-red-500" />
               </button>
             </Space>
@@ -130,26 +161,6 @@ const Skills = () => {
       ),
     },
   ];
-
-  const handleblock = (_id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
-        });
-      }
-    });
-  };
 
   const onFinish = async (values) => {
     const formData = new FormData();
@@ -251,8 +262,7 @@ const Skills = () => {
         <Pagination
           current={currentPage}
           pageSize={pageSize}
-          total={50}
-          //   total={clientdata?.data?.pagination?.total}
+          total={data?.data?.meta?.total}
           onChange={handlePageChange}
         ></Pagination>
       </div>

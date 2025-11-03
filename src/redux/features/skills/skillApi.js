@@ -25,7 +25,14 @@ const SkillApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["skills"],
     }),
+    deleteSkill: builder.mutation({
+      query: (_id) => ({
+        url: `/skills/${_id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["skills"],
+    }),
   }),
 });
 
-export const { useGetAllSkillsQuery, useCreateSkillMutation } = SkillApi;
+export const { useGetAllSkillsQuery, useCreateSkillMutation, useDeleteSkillMutation } = SkillApi;
