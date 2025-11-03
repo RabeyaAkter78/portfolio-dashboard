@@ -1,97 +1,26 @@
 /* eslint-disable no-unused-vars */
 import {
-  Avatar,
   ConfigProvider,
   Form,
   Input,
-  InputNumber,
-  message,
   Pagination,
   Select,
   Space,
   Table,
   Upload,
 } from "antd";
-import { BiEdit } from "react-icons/bi";
 import { useState } from "react";
 import { Modal } from "antd";
-import { FaCheck, FaEye, FaImage, FaPlus } from "react-icons/fa";
+import { FaImage, FaPlus } from "react-icons/fa";
 import { SearchOutlined } from "@ant-design/icons";
-import { MdBlock } from "react-icons/md";
-// import user from "../../assets/image/user.png";
-// import {
-//   useCreateClientMutation,
-//   useGetAllClientQuery,
-// } from "../../redux/Feature/clientApi/clientApi";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaTrash } from "react-icons/fa6";
-import { FiArrowUpRight } from "react-icons/fi";
-// import { BASE_URL } from "../../redux/utils/utils";
+import { useGetAllSkillsQuery } from "../../redux/features/skills/skillApi";
+import { BASE_URL } from "../../redux/utils/baseUrl";
 const Skills = () => {
   const [form] = Form.useForm();
-  //   const { data: clientdata } = useGetAllClientQuery();
   const navigate = useNavigate();
-  //   const [createClient] = useCreateClientMutation();
-
-  const userData = [
-    {
-      title: "React.js",
-      short_desc:
-        "Built complex UIs and SPAs with React, using hooks and context.",
-      experties_level: "Advanced",
-      skillIcon: "/images/skills/react.png",
-    },
-    {
-      title: "Next.js",
-      short_desc: "Developed SEO-friendly SSR applications and dynamic routes.",
-      experties_level: "Advanced",
-      skillIcon: "/images/skills/nextjs.png",
-    },
-    {
-      title: "Redux Toolkit",
-      short_desc: "State management with Redux slices and async thunk APIs.",
-      experties_level: "Intermediate",
-      skillIcon: "/images/skills/redux.png",
-    },
-    {
-      title: "Tailwind CSS",
-      short_desc: "Rapid UI development using utility-first CSS framework.",
-      experties_level: "Advanced",
-      skillIcon: "/images/skills/tailwind.png",
-    },
-    {
-      title: "TypeScript",
-      short_desc: "Ensured type safety and better DX in large React projects.",
-      experties_level: "Intermediate",
-      skillIcon: "/images/skills/typescript.png",
-    },
-    {
-      title: "Node.js",
-      short_desc: "Built RESTful APIs using Express.js and MongoDB.",
-      experties_level: "Intermediate",
-      skillIcon: "/images/skills/node.png",
-    },
-    {
-      title: "Ant Design",
-      short_desc: "Designed elegant UIs with Ant Design components and themes.",
-      experties_level: "Advanced",
-      skillIcon: "/images/skills/antdesign.png",
-    },
-    {
-      title: "Firebase",
-      short_desc:
-        "Used Firebase Auth and Firestore for full-stack applications.",
-      experties_level: "Intermediate",
-      skillIcon: "/images/skills/firebase.png",
-    },
-    {
-      title: "Git & GitHub",
-      short_desc: "Version control and team collaboration using Git/GitHub.",
-      experties_level: "Advanced",
-      skillIcon: "/images/skills/git.png",
-    },
-  ];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserClient, setSelectedUserClient] = useState(null);
@@ -101,8 +30,14 @@ const Skills = () => {
   const [addClientModal, setAddClientModal] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-
-  // console.log(profileImage);
+  const [title, setTitle] = useState("");
+  const { data } = useGetAllSkillsQuery({
+    page: currentPage,
+    limit: pageSize,
+    title,
+  });
+  console.log(data?.data?.data);
+  const skillData = data?.data?.data;
 
   const handleBeforeUpload = (file) => {
     form.setFieldsValue({ class_banner: [file] });
@@ -156,25 +91,24 @@ const Skills = () => {
         <div className="flex items-center gap-2">
           <img
             className="shadow-md rounded-full h-10 w-10"
-            // src={`${BASE_URL}${record?.skillIcon}`}
-            src=""
+            src={`${record?.skillImage}`}
           />
           <span>{record.title}</span>
         </div>
       ),
     },
     {
-      title: "Description",
-      dataIndex: "short_desc",
-      key: "short_desc",
+      title: "Years Of Experience",
+      dataIndex: "yearsOfExp",
+      key: "yearsOfExp",
     },
 
     {
       title: "Expeties Level",
-      key: "experties_level",
+      key: "level",
       render: (_, record) => {
-        const experties_level = record.experties_level || "N/A";
-        return <p>{experties_level}</p>;
+        const level = record.level || "N/A";
+        return <p>{level}</p>;
       },
     },
 
@@ -326,7 +260,7 @@ const Skills = () => {
         >
           <Table
             columns={columns}
-            dataSource={userData || []}
+            dataSource={skillData || []}
             pagination={false}
             rowKey="id"
           />
@@ -397,7 +331,10 @@ const Skills = () => {
             </Form.Item>
 
             <Form.Item name="description" label={<p>Description</p>}>
-              <Input.TextArea rows={3} placeholder="description"></Input.TextArea>
+              <Input.TextArea
+                rows={3}
+                placeholder="description"
+              ></Input.TextArea>
             </Form.Item>
             <Form.Item>
               <button
