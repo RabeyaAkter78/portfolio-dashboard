@@ -354,65 +354,121 @@ const Projects = () => {
           onChange={handlePageChange}
         ></Pagination>
       </div>
-      <Modal open={isModalOpen} onCancel={handleCancel} footer={null}>
-        {selectedUserClient && (
-          <div className="">
-            <div className="bg-red-100 text-center relative h-[100px] w-full flex flex-col justify-center items-center">
-              <img
-                className="shadow-md h-32 w-32 absolute top-[20px] left-[50%] translate-x-[-50%]"
-                // src={
-                //   selectedUserClient?.clientImage
-                //     ? `${BASE_URL}${selectedUserClient.clientImage}`
-                //     : user
-                // }
-                src=""
-              />
-            </div>
+     <Modal open={isModalOpen} onCancel={handleCancel} footer={null} width={800}>
+  {selectedUserClient && (
+    <div>
+      <div className="bg-blue-100 text-center relative h-[150px] w-full flex flex-col justify-center items-center">
+        <img
+          className="shadow-md h-32 w-32 absolute top-[20px] left-[50%] translate-x-[-50%] rounded-lg object-cover"
+          src={selectedUserClient?.coverImage || ""}
+          alt={selectedUserClient?.name || "Project Image"}
+        />
+      </div>
 
-            <div className="mt-16">
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Name:</p>
-                <p>{selectedUserClient?.name || "N/A"}</p>
-              </div>
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Employee ID:</p>
-                <p>{selectedUserClient?.userId || "N/A"}</p>
-              </div>
+      <div className="mt-20 px-4">
+        {/* Project Name */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Name:</p>
+          <p>{selectedUserClient?.name || "N/A"}</p>
+        </div>
 
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Location:</p>
-                <p>{selectedUserClient?.location || "N/A"}</p>
-              </div>
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Phone Number:</p>
-                <p>{selectedUserClient?.phoneNumber || "N/A"}</p>
-              </div>
+        {/* Description */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Description:</p>
+          <p>{selectedUserClient?.description || "N/A"}</p>
+        </div>
 
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Rates:</p>
-                <p>{selectedUserClient?.rates ?? "N/A"}</p>
-              </div>
+        {/* Technologies */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Technologies:</p>
+          <p>{selectedUserClient?.technologies?.join(", ") || "N/A"}</p>
+        </div>
 
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Created At:</p>
-                <p>
-                  {new Date(selectedUserClient?.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Updated At:</p>
-                <p>
-                  {new Date(selectedUserClient?.updatedAt).toLocaleString()}
-                </p>
-              </div>
-              <div className="flex gap-2 mb-4">
-                <p className="font-bold">Blocked:</p>
-                <p>{selectedUserClient?.isBlocked ? "Yes" : "No"}</p>
-              </div>
-            </div>
+        {/* URLs */}
+        <div className="flex flex-col mb-3">
+          <p className="font-bold">Links:</p>
+          <ul className="list-disc list-inside text-blue-600 underline">
+            {selectedUserClient?.liveUrl && (
+              <li>
+                <a href={selectedUserClient.liveUrl} target="_blank" rel="noreferrer">
+                  Live Site
+                </a>
+              </li>
+            )}
+            {selectedUserClient?.clientUrl && (
+              <li>
+                <a href={selectedUserClient.clientUrl} target="_blank" rel="noreferrer">
+                  Client Repository
+                </a>
+              </li>
+            )}
+            {selectedUserClient?.serverUrl && (
+              <li>
+                <a href={selectedUserClient.serverUrl} target="_blank" rel="noreferrer">
+                  Server Repository
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+
+        {/* Category */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Category:</p>
+          <p>{selectedUserClient?.category || "N/A"}</p>
+        </div>
+
+        {/* Features */}
+        <div className="flex flex-col mb-3">
+          <p className="font-bold">Features:</p>
+          <ul className="list-disc list-inside">
+            {selectedUserClient?.features?.map((feature, i) => (
+              <li key={i}>{feature}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Dates */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Start Date:</p>
+          <p>{selectedUserClient?.startDate || "N/A"}</p>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">End Date:</p>
+          <p>{selectedUserClient?.endDate || "N/A"}</p>
+        </div>
+
+        {/* Team Info */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Team Project:</p>
+          <p>{selectedUserClient?.teamProject ? "Yes" : "No"}</p>
+        </div>
+
+        {selectedUserClient?.teamMembers?.length > 0 && (
+          <div className="flex flex-col mb-3">
+            <p className="font-bold">Team Members:</p>
+            <ul className="list-disc list-inside">
+              {selectedUserClient.teamMembers.map((member, i) => (
+                <li key={i}>{member}</li>
+              ))}
+            </ul>
           </div>
         )}
-      </Modal>
+
+        {/* Timestamps */}
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Created At:</p>
+          <p>{new Date(selectedUserClient?.createdAt).toLocaleString()}</p>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <p className="font-bold w-40">Updated At:</p>
+          <p>{new Date(selectedUserClient?.updatedAt).toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  )}
+</Modal>
+
 
       <Modal
         open={addClientModal}
