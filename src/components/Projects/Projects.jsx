@@ -17,53 +17,34 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaEye, FaTrash } from "react-icons/fa6";
+import { useGetAllProjectsQuery } from "../../redux/features/projects/projectsApi";
 const Projects = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const projectsData = [
-    {
-      title: "Dance Academy",
-      short_desc: "An E Larning Platform",
-      technology_used: "React Js , nect js, Stripe",
-      projectImage: "/images/skills/react.png",
-      isTeamProject: false,
-      credentials: [
-        {
-          adminEmail: "",
-          adminPassword: "",
-        },
-      ],
-      contributorsName: [
-        {
-          name: "",
-          image: "",
-          email: "",
-          github: "",
-          LinkedIn: "",
-        },
-      ],
-      duration: {
-        startDate: "",
-        endDate: "",
-      },
-      liveLink: "",
-      clientRepo: "",
-      ServerRepo: "",
-    },
-  ];
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserClient, setSelectedUserClient] = useState(null);
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(null);
+  const [category, setCategory] = useState();
+  const [duration, setDuration] = useState();
+  const [technologies, setTechnologies] = useState();
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [addClientModal, setAddClientModal] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // console.log(profileImage);
+  const { data: allProjectsData } = useGetAllProjectsQuery({
+    name,
+    technologies,
+    category,
+    duration,
+    page: currentPage,
+    limit: pageSize,
+  });
 
+  console.log(allProjectsData?.data?.data);
+  const projectsData = allProjectsData?.data?.data;
   const handleBeforeUpload = (file) => {
     form.setFieldsValue({ class_banner: [file] });
     setProfileImage(file);
@@ -111,28 +92,28 @@ const Projects = () => {
     },
     {
       title: "Title",
-      key: "title",
+      key: "name",
       render: (_, record) => (
         <div className="flex items-center gap-2">
           <img
             className="shadow-md rounded-full h-10 w-10"
-            src={record.projectImage}
+            src={record.coverImage}
             alt="project"
           />
-          <span>{record.title}</span>
+          <span>{record.name}</span>
         </div>
       ),
     },
     {
-      title: "Description",
-      dataIndex: "short_desc",
-      key: "short_desc",
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
     },
     {
       title: "Technology Used",
-      key: "technology_used",
+      key: "technologies",
       render: (_, record) => {
-        return <p>{record.technology_used || "N/A"}</p>;
+        return <p>{record.technologies?.map((item) => item) || "N/A"}</p>;
       },
     },
     {
@@ -155,11 +136,11 @@ const Projects = () => {
     },
     {
       title: "Live Link",
-      key: "liveLink",
+      key: "liveUrl",
       render: (_, record) =>
-        record.liveLink ? (
+        record.liveUrl ? (
           <a
-            href={record.liveLink}
+            href={record.liveUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 underline"
@@ -312,8 +293,6 @@ const Projects = () => {
                   placeholder="Search "
                   allowClear
                   size="large"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   onPressEnter={handleSearch}
                   prefix={
                     <SearchOutlined
