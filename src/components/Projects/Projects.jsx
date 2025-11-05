@@ -21,6 +21,7 @@ import Swal from "sweetalert2";
 import { FaEye, FaTrash } from "react-icons/fa6";
 import {
   useCreateProjectMutation,
+  useDeleteProjectMutation,
   useGetAllProjectsQuery,
 } from "../../redux/features/projects/projectsApi";
 import TextArea from "antd/es/input/TextArea";
@@ -49,6 +50,8 @@ const Projects = () => {
     limit: pageSize,
   });
   const [createProject, { isLoading }] = useCreateProjectMutation();
+  const [deleteProject, { isLoading: deleteLoading }] =
+    useDeleteProjectMutation();
   // console.log(allProjectsData?.data?.data);
   const projectsData = allProjectsData?.data?.data;
   const handleBeforeUpload = (file) => {
@@ -214,7 +217,7 @@ const Projects = () => {
               </button>
             </Space>
             <Space size="middle">
-              <button onClick={() => handleDelete(record)}>
+              <button onClick={() => handleDelete(record._id)}>
                 <FaTrash className="text-xl text-red-500" />
               </button>
             </Space>
@@ -226,7 +229,9 @@ const Projects = () => {
   const handleEdit = (_id) => {
     navigate(`/projects/${_id} `, { state: { id: _id } });
   };
+
   const handleDelete = (_id) => {
+    console.log(_id);
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -237,6 +242,7 @@ const Projects = () => {
       confirmButtonText: "Yes, delete it!",
     }).then((result) => {
       if (result.isConfirmed) {
+        deleteProject(_id);
         Swal.fire({
           title: "Deleted!",
           text: "Your file has been deleted.",
