@@ -224,7 +224,7 @@ const Projects = () => {
     },
   ];
   const handleEdit = (_id) => {
-    navigate(`/projects/${_id}`);
+    navigate(`/projects/${_id} `, { state: { id: _id } });
   };
   const handleDelete = (_id) => {
     Swal.fire({
@@ -272,7 +272,7 @@ const Projects = () => {
     try {
       formData.append("data", JSON.stringify(data));
       if (profileImage) {
-        formData.append("file", profileImage); 
+        formData.append("file", profileImage);
       }
       const res = await createProject(formData).unwrap();
       message.success(res?.message);
