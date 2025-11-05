@@ -13,6 +13,7 @@ import Login from "../components/Auth/Login/Login";
 import ForgatePassword from "../components/Auth/ForgatePassword/ForgatePassword";
 import VerifyPass from "../components/Auth/VerifyPass/VerifyPass";
 import NewPass from "../components/Auth/Newpass/NewPass";
+import EditProject from "../components/Projects/EditProject";
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ export const router = createBrowserRouter([
       {
         path: "/projects",
         element: <Projects />,
+      },
+      {
+        path: "/projects/:id",
+        element: <EditProject />,
       },
       {
         path: "/profile",

@@ -4,6 +4,7 @@ import {
   DatePicker,
   Form,
   Input,
+  message,
   Pagination,
   Select,
   Space,
@@ -18,7 +19,10 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaEye, FaTrash } from "react-icons/fa6";
-import { useGetAllProjectsQuery } from "../../redux/features/projects/projectsApi";
+import {
+  useCreateProjectMutation,
+  useGetAllProjectsQuery,
+} from "../../redux/features/projects/projectsApi";
 import TextArea from "antd/es/input/TextArea";
 const Projects = () => {
   const [form] = Form.useForm();
@@ -44,8 +48,8 @@ const Projects = () => {
     page: currentPage,
     limit: pageSize,
   });
-
-  console.log(allProjectsData?.data?.data);
+  const [createProject, { isLoading }] = useCreateProjectMutation();
+  // console.log(allProjectsData?.data?.data);
   const projectsData = allProjectsData?.data?.data;
   const handleBeforeUpload = (file) => {
     form.setFieldsValue({ class_banner: [file] });
@@ -59,10 +63,6 @@ const Projects = () => {
   };
 
   const handleAddClientCancel = () => {
-    setAddClientModal(false);
-  };
-
-  const handleAddClientOk = () => {
     setAddClientModal(false);
   };
 
@@ -209,12 +209,12 @@ const Projects = () => {
               </button>
             </Space>
             <Space size="middle">
-              <button onClick={() => handleNotes(record)}>
+              <button onClick={() => handleEdit(record?._id)}>
                 <FaEdit className="text-xl text-red-500" />
               </button>
             </Space>
             <Space size="middle">
-              <button onClick={() => handleNotes(record)}>
+              <button onClick={() => handleDelete(record)}>
                 <FaTrash className="text-xl text-red-500" />
               </button>
             </Space>
@@ -223,8 +223,10 @@ const Projects = () => {
       ),
     },
   ];
-
-  const handleblock = (_id) => {
+  const handleEdit = (_id) => {
+    navigate(`/projects/${_id}`);
+  };
+  const handleDelete = (_id) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -244,34 +246,43 @@ const Projects = () => {
     });
   };
 
-  const handleNotes = (record) => {
-    // console.log(record._id);
-    setSelectedUserClient(record._id);
-    navigate(`notes/${record._id}`, {
-      state: { selectedUserClient: record._id },
-    });
-  };
-
   const onFinish = async (values) => {
     console.log("Success", values);
+
     const formData = new FormData();
+
+    // Convert DatePicker values to string
     const data = {
       name: values.name,
-      phoneNumber: values.phoneNumber,
-      location: values.location,
-      rates: values.rates,
+      description: values.description,
+      technologies: values.technologies,
+      liveUrl: values.liveUrl,
+      clientUrl: values.clientUrl,
+      serverUrl: values.serverUrl,
+      category: values.category,
+      features: values.features,
+      startDate: values.startDate?.format("YYYY-MM-DD"),
+      endDate: values.endDate?.format("YYYY-MM-DD"),
+      teamProject: values.teamProject,
+      teamMembers: values.teamMembers,
     };
 
-    // try {
-    //   formData.append("client", JSON.stringify(data));
-    //   formData.append("projectImage", profileImage);
+    console.log(data);
 
-    //   const res = await createClient(formData).unwrap();
-    //   message.success(res?.message);
-    // } catch (error) {
-    //   message.error(error?.message);
-    //   console.log(error);
-    // }
+    try {
+      formData.append("data", JSON.stringify(data));
+      if (profileImage) {
+        formData.append("file", profileImage); 
+      }
+      const res = await createProject(formData).unwrap();
+      message.success(res?.message);
+      form.resetFields();
+      setPreviewImage(false);
+      setAddClientModal(false);
+    } catch (error) {
+      message.error(error?.message || "Something went wrong!");
+      console.log(error);
+    }
   };
 
   return (
@@ -354,121 +365,141 @@ const Projects = () => {
           onChange={handlePageChange}
         ></Pagination>
       </div>
-     <Modal open={isModalOpen} onCancel={handleCancel} footer={null} width={800}>
-  {selectedUserClient && (
-    <div>
-      <div className="bg-blue-100 text-center relative h-[150px] w-full flex flex-col justify-center items-center">
-        <img
-          className="shadow-md h-32 w-32 absolute top-[20px] left-[50%] translate-x-[-50%] rounded-lg object-cover"
-          src={selectedUserClient?.coverImage || ""}
-          alt={selectedUserClient?.name || "Project Image"}
-        />
-      </div>
+      <Modal
+        open={isModalOpen}
+        onCancel={handleCancel}
+        footer={null}
+        width={800}
+      >
+        {selectedUserClient && (
+          <div>
+            <div className="bg-blue-100 text-center relative h-[150px] w-full flex flex-col justify-center items-center">
+              <img
+                className="shadow-md h-32 w-32 absolute top-[20px] left-[50%] translate-x-[-50%] rounded-lg object-cover"
+                src={selectedUserClient?.coverImage || ""}
+                alt={selectedUserClient?.name || "Project Image"}
+              />
+            </div>
 
-      <div className="mt-20 px-4">
-        {/* Project Name */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Name:</p>
-          <p>{selectedUserClient?.name || "N/A"}</p>
-        </div>
+            <div className="mt-20 px-4">
+              {/* Project Name */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Name:</p>
+                <p>{selectedUserClient?.name || "N/A"}</p>
+              </div>
 
-        {/* Description */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Description:</p>
-          <p>{selectedUserClient?.description || "N/A"}</p>
-        </div>
+              {/* Description */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Description:</p>
+                <p>{selectedUserClient?.description || "N/A"}</p>
+              </div>
 
-        {/* Technologies */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Technologies:</p>
-          <p>{selectedUserClient?.technologies?.join(", ") || "N/A"}</p>
-        </div>
+              {/* Technologies */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Technologies:</p>
+                <p>{selectedUserClient?.technologies?.join(", ") || "N/A"}</p>
+              </div>
 
-        {/* URLs */}
-        <div className="flex flex-col mb-3">
-          <p className="font-bold">Links:</p>
-          <ul className="list-disc list-inside text-blue-600 underline">
-            {selectedUserClient?.liveUrl && (
-              <li>
-                <a href={selectedUserClient.liveUrl} target="_blank" rel="noreferrer">
-                  Live Site
-                </a>
-              </li>
-            )}
-            {selectedUserClient?.clientUrl && (
-              <li>
-                <a href={selectedUserClient.clientUrl} target="_blank" rel="noreferrer">
-                  Client Repository
-                </a>
-              </li>
-            )}
-            {selectedUserClient?.serverUrl && (
-              <li>
-                <a href={selectedUserClient.serverUrl} target="_blank" rel="noreferrer">
-                  Server Repository
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
+              {/* URLs */}
+              <div className="flex flex-col mb-3">
+                <p className="font-bold">Links:</p>
+                <ul className="list-disc list-inside text-blue-600 underline">
+                  {selectedUserClient?.liveUrl && (
+                    <li>
+                      <a
+                        href={selectedUserClient.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Live Site
+                      </a>
+                    </li>
+                  )}
+                  {selectedUserClient?.clientUrl && (
+                    <li>
+                      <a
+                        href={selectedUserClient.clientUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Client Repository
+                      </a>
+                    </li>
+                  )}
+                  {selectedUserClient?.serverUrl && (
+                    <li>
+                      <a
+                        href={selectedUserClient.serverUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Server Repository
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </div>
 
-        {/* Category */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Category:</p>
-          <p>{selectedUserClient?.category || "N/A"}</p>
-        </div>
+              {/* Category */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Category:</p>
+                <p>{selectedUserClient?.category || "N/A"}</p>
+              </div>
 
-        {/* Features */}
-        <div className="flex flex-col mb-3">
-          <p className="font-bold">Features:</p>
-          <ul className="list-disc list-inside">
-            {selectedUserClient?.features?.map((feature, i) => (
-              <li key={i}>{feature}</li>
-            ))}
-          </ul>
-        </div>
+              {/* Features */}
+              <div className="flex flex-col mb-3">
+                <p className="font-bold">Features:</p>
+                <ul className="list-disc list-inside">
+                  {selectedUserClient?.features?.map((feature, i) => (
+                    <li key={i}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
 
-        {/* Dates */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Start Date:</p>
-          <p>{selectedUserClient?.startDate || "N/A"}</p>
-        </div>
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">End Date:</p>
-          <p>{selectedUserClient?.endDate || "N/A"}</p>
-        </div>
+              {/* Dates */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Start Date:</p>
+                <p>{selectedUserClient?.startDate || "N/A"}</p>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">End Date:</p>
+                <p>{selectedUserClient?.endDate || "N/A"}</p>
+              </div>
 
-        {/* Team Info */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Team Project:</p>
-          <p>{selectedUserClient?.teamProject ? "Yes" : "No"}</p>
-        </div>
+              {/* Team Info */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Team Project:</p>
+                <p>{selectedUserClient?.teamProject ? "Yes" : "No"}</p>
+              </div>
 
-        {selectedUserClient?.teamMembers?.length > 0 && (
-          <div className="flex flex-col mb-3">
-            <p className="font-bold">Team Members:</p>
-            <ul className="list-disc list-inside">
-              {selectedUserClient.teamMembers.map((member, i) => (
-                <li key={i}>{member}</li>
-              ))}
-            </ul>
+              {selectedUserClient?.teamMembers?.length > 0 && (
+                <div className="flex flex-col mb-3">
+                  <p className="font-bold">Team Members:</p>
+                  <ul className="list-disc list-inside">
+                    {selectedUserClient.teamMembers.map((member, i) => (
+                      <li key={i}>{member}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Created At:</p>
+                <p>
+                  {new Date(selectedUserClient?.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <p className="font-bold w-40">Updated At:</p>
+                <p>
+                  {new Date(selectedUserClient?.updatedAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
           </div>
         )}
-
-        {/* Timestamps */}
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Created At:</p>
-          <p>{new Date(selectedUserClient?.createdAt).toLocaleString()}</p>
-        </div>
-        <div className="flex gap-2 mb-3">
-          <p className="font-bold w-40">Updated At:</p>
-          <p>{new Date(selectedUserClient?.updatedAt).toLocaleString()}</p>
-        </div>
-      </div>
-    </div>
-  )}
-</Modal>
-
+      </Modal>
 
       <Modal
         open={addClientModal}
@@ -478,7 +509,6 @@ const Projects = () => {
           <h2 className="text-lg font-semibold text-gray-800">Add Project</h2>
         }
         width={850}
-
       >
         <Form
           name="addProject"
@@ -527,6 +557,32 @@ const Projects = () => {
             ]}
           >
             <Input placeholder="Enter project title" />
+          </Form.Item>
+          <Form.Item
+            name="liveUrl"
+            label={<span className="font-medium">liveUrl</span>}
+            rules={[{ required: true, message: "Please enter liveUrl" }]}
+          >
+            <Input placeholder="Enter project liveUrl" />
+          </Form.Item>
+          <Form.Item
+            name="liveUrl"
+            label={<span className="font-medium">liveUrl</span>}
+            rules={[{ required: true, message: "Please enter liveUrl" }]}
+          >
+            <Input placeholder="Enter project liveUrl" />
+          </Form.Item>
+          <Form.Item
+            name="clientUrl"
+            label={<span className="font-medium">clientUrl</span>}
+          >
+            <Input placeholder="Enter project clientUrl" />
+          </Form.Item>
+          <Form.Item
+            name="serverUrl"
+            label={<span className="font-medium">serverUrl</span>}
+          >
+            <Input placeholder="Enter project serverUrl" />
           </Form.Item>
 
           {/* Technologies */}
@@ -617,7 +673,7 @@ const Projects = () => {
               type="submit"
               className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md transition"
             >
-              Submit
+              {isLoading ? "Submitting..." : "Submit"}
             </button>
           </Form.Item>
         </Form>
