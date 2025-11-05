@@ -8,61 +8,35 @@ import {
   Select,
   Space,
   Table,
-  Upload,
+  DatePicker,
+  Modal,
 } from "antd";
 import { useState } from "react";
-import { Modal } from "antd";
-import { FaImage, FaPlus } from "react-icons/fa";
+import { FaPlus, FaTrash } from "react-icons/fa6";
 import { SearchOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { FaTrash } from "react-icons/fa6";
-import { useCreateExperienceMutation, useDeleteExperienceMutation, useGetExperienceQuery } from "../../redux/features/experienceApi/experienceApi";
+import {
+  useCreateExperienceMutation,
+  useDeleteExperienceMutation,
+  useGetExperienceQuery,
+} from "../../redux/features/experienceApi/experienceApi";
+import dayjs from "dayjs";
+
+const { RangePicker } = DatePicker;
 
 const Experience = () => {
   const [form] = Form.useForm();
-  const navigate = useNavigate();
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [addClientModal, setAddClientModal] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [title, setTitle] = useState("");
-  const { data } = useGetExperienceQuery();
-  console.log(data?.data?.meta?.total);
-
-  const skillData = data?.data?.data;
-
+  const [addModal, setAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data, refetch } = useGetExperienceQuery();
   const [createExperience, { isLoading }] = useCreateExperienceMutation();
-  const [deleteExperience, { isLoading: deleteLoading }] = useDeleteExperienceMutation();
+  const [deleteExperience] = useDeleteExperienceMutation();
 
-  const handleBeforeUpload = (file) => {
-    form.setFieldsValue({ class_banner: [file] });
-    setProfileImage(file);
-    setPreviewImage(URL.createObjectURL(file));
-    return false; // Prevent auto upload
-  };
+  const experiences = data?.data?.data || [];
 
-  const handleAddClient = () => {
-    setAddClientModal(true);
-  };
-
-  const handleAddClientCancel = () => {
-    setAddClientModal(false);
-  };
-
-  const handleAddClientOk = () => {
-    setAddClientModal(false);
-  };
-
-  const handlePageChange = (page, pageSize) => {
-    setCurrentPage(page);
-    setPageSize(pageSize);
-  };
-
-  const handleSearch = () => {
-    // refetc();
-  };
+  // 🔥 Delete experience
   const handleDelete = async (_id) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -77,255 +51,223 @@ const Experience = () => {
     if (result.isConfirmed) {
       try {
         await deleteExperience(_id);
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
-        });
+        Swal.fire("Deleted!", "Experience deleted successfully", "success");
+        refetch();
       } catch (error) {
-        Swal.fire({
-          title: "Error!",
-          text: "Something went wrong.",
-          icon: "error",
-        });
+        Swal.fire("Error!", "Something went wrong.", "error");
       }
     }
   };
 
+  // 🧾 Table columns
   const columns = [
     {
       title: "#",
-      dataIndex: "slno",
-      key: "slno",
+      key: "index",
       render: (text, record, index) => index + 1,
     },
     {
       title: "Title",
+      dataIndex: "title",
       key: "title",
-      render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <img
-            className="shadow-md rounded-full h-10 w-10"
-            src={`${record?.skillImage}`}
-          />
-          <span>{record.title}</span>
-        </div>
-      ),
     },
     {
-      title: "Years Of Experience",
-      dataIndex: "yearsOfExp",
-      key: "yearsOfExp",
+      title: "Organization",
+      dataIndex: "orgName",
+      key: "orgName",
     },
-
     {
-      title: "Expeties Level",
-      key: "level",
+      title: "Duration",
+      key: "duration",
       render: (_, record) => {
-        const level = record.level || "N/A";
-        return <p>{level}</p>;
+        const start = dayjs(record.startDate).format("MMM YYYY");
+        const end = record.tilnow === "true"
+          ? "Present"
+          : dayjs(record.endDate).format("MMM YYYY");
+        return `${start} - ${end}`;
       },
     },
-
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "Responsibilities",
+      key: "responsiblities",
+      render: (_, record) => (
+        <ul className="list-disc ml-4">
+          {record.responsiblities?.map((r, i) => (
+            <li key={i}>{r}</li>
+          ))}
+        </ul>
+      ),
+    },
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <ConfigProvider
-          theme={{
-            components: {
-              Button: {
-                defaultHoverBorderColor: "rgb(47,84,235)",
-                defaultHoverColor: "rgb(47,84,235)",
-                defaultBorderColor: "rgb(47,84,235)",
-              },
-            },
-          }}
-        >
-          <div className="flex justify-center items-center gap-2">
-            <Space size="middle">
-              <button onClick={() => handleDelete(record._id)}>
-                <FaTrash className="text-xl text-red-500" />
-              </button>
-            </Space>
-          </div>
-        </ConfigProvider>
+        <button onClick={() => handleDelete(record._id)}>
+          <FaTrash className="text-xl text-red-500" />
+        </button>
       ),
     },
   ];
 
+  // ✅ Form submission
   const onFinish = async (values) => {
-    const formData = new FormData();
-    const data = {
-      title: values.title,
-      level: values.expertiesLevel,
-      yearsOfExp: values.yearsOfExp,
-    };
-
     try {
-      formData.append("data", JSON.stringify(data));
-      formData.append("skillImage", profileImage);
+      const [startDate, endDate] = values.dateRange || [];
+      const payload = {
+        title: values.title,
+        orgName: values.orgName,
+        location: values.location,
+        responsiblities: values.responsiblities,
+        startDate: startDate?.toISOString(),
+        endDate: endDate?.toISOString(),
+        tilnow: values.tilnow || "false",
+      };
 
-      const res = await createExperience(formData).unwrap();
-      message.success(res?.message);
+      const res = await createExperience(payload).unwrap();
+      message.success(res?.message || "Experience added successfully!");
+      setAddModal(false);
       form.resetFields();
-      setProfileImage(null);
-      setPreviewImage(null);
-      setAddClientModal(false);
+      refetch();
     } catch (error) {
-      message.error(error?.message);
       console.log(error);
+      message.error(error?.data?.message || "Failed to add experience");
     }
   };
 
   return (
-    <div className="">
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-10">
-        <div className="mt-4 md:mt-0 flex justify-between items-center gap-2">
-          <div>
-            <ConfigProvider
-              theme={{
-                components: {
-                  Input: {
-                    borderRadius: 0,
-                    hoverBorderColor: "none",
-                    activeBorderColor: "none",
-                  },
-                },
-              }}
-            >
-              <div className="flex gap-2 items-center relative">
-                <Input
-                  placeholder="Search "
-                  allowClear
-                  size="large"
-                  onChange=""
-                  onPressEnter={handleSearch}
-                  prefix={
-                    <SearchOutlined
-                      style={{ cursor: "pointer" }}
-                      onClick={handleSearch}
-                    />
-                  }
-                />
-
-                <button
-                  onClick={handleSearch}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-primaryColor text-white p-2 rounded-r-lg"
-                >
-                  search
-                </button>
-              </div>
-            </ConfigProvider>
-          </div>
+    <div>
+      {/* 🔍 Search & Add Button */}
+      <div className="flex flex-col md:flex-row justify-between md:items-center mb-8">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search experience"
+            allowClear
+            size="large"
+            prefix={<SearchOutlined />}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <button
-          onClick={handleAddClient}
-          className="px-10 py-3    rounded-xl bg-primary text-white font-semiboldbold shadow-lg flex justify-center items-center gap-2"
+          onClick={() => setAddModal(true)}
+          className="px-8 py-3 rounded-xl bg-primary text-white font-semibold flex items-center gap-2"
         >
-          <FaPlus></FaPlus>
-          Add Skills
+          <FaPlus /> Add Experience
         </button>
       </div>
-      <div className=" overflow-x-auto">
-        <ConfigProvider
-          theme={{
-            components: {
-              Table: {
-                headerBg: "#f97316",
-                colorText: "rgb(0,0,0)",
-                colorTextHeading: "rgb(255,255,255)",
-                headerSortActiveBg: "#f97316",
-                headerFilterHoverBg: "#f97316",
-              },
-            },
-          }}
-        >
-          <Table
-            columns={columns}
-            dataSource={skillData || []}
-            pagination={false}
-            rowKey="id"
-          />
-        </ConfigProvider>
-      </div>
 
-      <div className="mt-10 flex justify-center items-center">
+      {/* 📋 Experience Table */}
+      <ConfigProvider
+        theme={{
+          components: {
+            Table: {
+              headerBg: "#f97316",
+              colorText: "black",
+              colorTextHeading: "white",
+            },
+          },
+        }}
+      >
+        <Table
+          columns={columns}
+          dataSource={experiences}
+          pagination={false}
+          rowKey="_id"
+        />
+      </ConfigProvider>
+
+      {/* 📄 Pagination */}
+      <div className="mt-10 flex justify-center">
         <Pagination
           current={currentPage}
           pageSize={pageSize}
           total={data?.data?.meta?.total}
-          onChange={handlePageChange}
-        ></Pagination>
+          onChange={(page, pageSize) => {
+            setCurrentPage(page);
+            setPageSize(pageSize);
+          }}
+        />
       </div>
 
+      {/* ➕ Add Modal */}
       <Modal
-        open={addClientModal}
-        onCancel={handleAddClientCancel}
+        open={addModal}
+        onCancel={() => setAddModal(false)}
         footer={null}
-        title="Add Skill"
+        title="Add Experience"
       >
-        <div>
-          <Form
-            name="addSkills"
-            initialValues={{ remember: true }}
-            style={{ maxWidth: 550 }}
-            onFinish={onFinish}
-            layout="vertical"
-            form={form}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          style={{ maxWidth: 550 }}
+        >
+          <Form.Item
+            name="title"
+            label="Title"
+            rules={[{ required: true, message: "Please enter a title" }]}
           >
-            <Form.Item name="skillIcon">
-              <div className="border border-dashed border-secondary p-5 flex justify-center items-center h-40">
-                <Upload
-                  showUploadList={false}
-                  maxCount={1}
-                  beforeUpload={handleBeforeUpload}
-                  setFileList={setProfileImage}
-                >
-                  {!previewImage ? (
-                    <>
-                      <FaImage className="text-secondary h-10 w-10" />
-                      <p className="text-secondary">Upload Image</p>
-                    </>
-                  ) : (
-                    <>
-                      <img
-                        src={previewImage}
-                        alt="Preview"
-                        className="h-24 object-contain"
-                      />
-                      <p className="text-secondary">{profileImage?.name}</p>
-                    </>
-                  )}
-                </Upload>
-              </div>
-            </Form.Item>
-            <Form.Item name="title" label={<p>Title</p>}>
-              <Input placeholder="Title"></Input>
-            </Form.Item>
+            <Input placeholder="e.g. Frontend Developer" />
+          </Form.Item>
 
-            <Form.Item name="expertiesLevel" label={<p>Experties Level</p>}>
-              <Select>
-                <Select.Option value="beginer">Bigener</Select.Option>
-                <Select.Option value="intermidiate">Intermidiate</Select.Option>
-                <Select.Option value="advance">Advance</Select.Option>
-                <Select.Option value="expert">Expert</Select.Option>
-              </Select>
-            </Form.Item>
+          <Form.Item
+            name="orgName"
+            label="Organization Name"
+            rules={[{ required: true, message: "Please enter organization name" }]}
+          >
+            <Input placeholder="e.g. TechWave Solutions" />
+          </Form.Item>
 
-            <Form.Item name="yearsOfExp" label={<p>Years Of Experience</p>}>
-              <Input placeholder="5"></Input>
-            </Form.Item>
-            <Form.Item>
-              <button
-                type="submit"
-                className="w-full py-2    rounded-xl bg-primary text-white font-semiboldbold shadow-lg flex justify-center items-center gap-2"
-              >
-                {isLoading ? "Submitting..." : "Submit"}
-              </button>
-            </Form.Item>
-          </Form>
-        </div>
+          <Form.Item
+            name="location"
+            label="Location"
+            rules={[{ required: true, message: "Please enter location" }]}
+          >
+            <Input placeholder="e.g. Dhaka, Bangladesh" />
+          </Form.Item>
+
+          <Form.Item
+            name="dateRange"
+            label="Start and End Date"
+            rules={[{ required: true, message: "Please select duration" }]}
+          >
+            <RangePicker className="w-full" />
+          </Form.Item>
+
+          <Form.Item name="tilnow" label="Currently Working">
+            <Select placeholder="Select option">
+              <Select.Option value="true">Yes</Select.Option>
+              <Select.Option value="false">No</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="responsiblities"
+            label="Responsibilities"
+            rules={[
+              { required: true, message: "Please add at least one responsibility" },
+            ]}
+          >
+            <Select
+              mode="tags"
+              placeholder="Type and press Enter to add responsibilities"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <button
+              type="submit"
+              className="w-full py-2 rounded-xl bg-primary text-white font-semibold flex justify-center items-center gap-2"
+            >
+              {isLoading ? "Submitting..." : "Submit"}
+            </button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
